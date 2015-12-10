@@ -3,6 +3,7 @@ package pipeline
 import (
 	. "github.com/francoishill/golang-common-ddd/Interface/Logger"
 	"github.com/francoishill/simple-continuous-deployment/ssh_rsync"
+	"path/filepath"
 )
 
 type rsyncUpload struct {
@@ -19,6 +20,9 @@ func (u *rsyncUpload) Execute(logger Logger, client ssh_rsync.SSHClient) {
 
 	if u.isDir {
 		client.Execute(`mkdir -p "` + remoteFull + `"`)
+	} else {
+		dirOfFile := filepath.Dir(remoteFull)
+		client.Execute(`mkdir -p "` + dirOfFile + `"`)
 	}
 
 	client.RsyncUpload(localFull, remoteFull, u.flags...)
