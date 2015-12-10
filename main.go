@@ -14,8 +14,6 @@ import (
 )
 
 type setup struct {
-	BaseLocalDir string `json:"base_local_dir"`
-
 	SshPrivateKeyPath string `json:"ssh_private_key_path"`
 	RemoteUser        string `json:"remote_user"`
 	RemoteHost        string `json:"remote_host"`
@@ -36,21 +34,22 @@ func (s *setup) Validate() {
 	}
 }
 
-func loadSetup() *setup {
-	if len(os.Args) < 2 {
-		log.Fatal("Command-line argument missing for yaml file")
+func loadSetup() (s *setup, baseLocalDir string) {
+	if len(os.Args) < 3 {
+		log.Fatal("Command-line requires two arguments, namely the yaml setup and the base-local-dir")
 	}
 
 	ymlSetupFile := os.Args[1]
+	baseLocalDir = os.Args[2]
 
 	yamlBytes, err := ioutil.ReadFile(ymlSetupFile)
 	CheckError(err)
 
-	s := &setup{}
+	s = &setup{}
 	err = yaml.Unmarshal(yamlBytes, s)
 	CheckError(err)
 	s.Validate()
-	return s
+	return
 }
 
 func main() {
@@ -61,7 +60,7 @@ func main() {
 		}
 	}()
 
-	s := loadSetup()
+	s, baseLocalDir := loadSetup()
 
 	client := ssh_rsync.NewBuilder(logger).
 		PrivateKeyPath(s.SshPrivateKeyPath).
@@ -69,17 +68,17 @@ func main() {
 		Build()
 
 	pendingCtx := &pipeline.PipelineContext{
-		LocalBaseDir:  s.BaseLocalDir,
+		LocalBaseDir:  baseLocalDir,
 		RemoteBaseDir: s.BaseRemoteDir + "_pending",
 	}
 
 	backupCtx := &pipeline.PipelineContext{
-		LocalBaseDir:  s.BaseLocalDir,
+		LocalBaseDir:  baseLocalDir,
 		RemoteBaseDir: s.BaseRemoteDir + "_backup",
 	}
 
 	finalCtx := &pipeline.PipelineContext{
-		LocalBaseDir:  s.BaseLocalDir,
+		LocalBaseDir:  baseLocalDir,
 		RemoteBaseDir: s.BaseRemoteDir,
 	}
 
