@@ -101,6 +101,7 @@ func main() {
 	steps = append(steps, pipeline.NewSetRemotePermissionsStep(pendingCtx, false, "/", "645"))
 
 	for _, ef := range s.ExecFiles {
+		steps = append(steps, pipeline.NewRsyncUploadStep(pendingCtx, false, ef, ef, fileFlags))
 		steps = append(steps, pipeline.NewSetRemotePermissionsStep(pendingCtx, false, ef, "755"))
 	}
 
